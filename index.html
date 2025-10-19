@@ -590,10 +590,16 @@
                         </div>
                     </div>
                     <div id="stickerField_${index}" class="sticker-field">
-                        <label class="required">If Yes, please apply a sticker to this machine and enter the sticker code below:</label>
-                        <input type="text" id="sticker_${index}" placeholder="e.g., CYA102030ILLY" oninput="validateStickerCode(${index})">
-                        <div class="sticker-hint">Format: CYA followed by 6 digits, then ILLY (e.g., CYA123456ILLY)</div>
-                        <div id="stickerError_${index}" class="validation-error">Invalid format. Code must be: CYA + 6 digits + ILLY (e.g., CYA123456ILLY)</div>
+                        <div class="form-group">
+                            <label class="required">Where is this equipment located within your establishment?</label>
+                            <input type="text" id="location_${index}" placeholder="e.g., Banquets Kitchen, Restaurant Floor 2, Pantry, Café, Ballroom, Back of House, Bar, Basement, In-Room Dining">
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Please apply a sticker to this machine and enter the sticker code below:</label>
+                            <input type="text" id="sticker_${index}" placeholder="e.g., CYA102030ILLY" oninput="validateStickerCode(${index})">
+                            <div class="sticker-hint">Format: CYA followed by 6 digits, then ILLY (e.g., CYA123456ILLY)</div>
+                            <div id="stickerError_${index}" class="validation-error">Invalid format. Code must be: CYA + 6 digits + ILLY (e.g., CYA123456ILLY)</div>
+                        </div>
                     </div>
                 `;
                 container.appendChild(assetCard);
@@ -603,15 +609,19 @@
         function toggleStickerField(index, show) {
             const stickerField = document.getElementById(`stickerField_${index}`);
             const stickerInput = document.getElementById(`sticker_${index}`);
+            const locationInput = document.getElementById(`location_${index}`);
             const stickerError = document.getElementById(`stickerError_${index}`);
             
             if (show) {
                 stickerField.classList.add('show');
                 stickerInput.required = true;
+                locationInput.required = true;
             } else {
                 stickerField.classList.remove('show');
                 stickerInput.required = false;
+                locationInput.required = false;
                 stickerInput.value = '';
+                locationInput.value = '';
                 stickerInput.classList.remove('invalid');
                 stickerError.classList.remove('show');
             }
@@ -749,6 +759,11 @@
                 </div>
                 
                 <div class="form-group">
+                    <label class="required">Where is this equipment located within your establishment?</label>
+                    <input type="text" id="addLocation_${additionalMachineCount}" placeholder="e.g., Banquets Kitchen, Restaurant Floor 2, Pantry, Café, Ballroom, Back of House, Bar, Basement, In-Room Dining" required>
+                </div>
+                
+                <div class="form-group">
                     <label class="required">Sticker Code Applied</label>
                     <input type="text" id="addSticker_${additionalMachineCount}" placeholder="e.g., CYA102030ILLY" oninput="validateAdditionalStickerCode(${additionalMachineCount})" required>
                     <div class="sticker-hint">Format: CYA followed by 6 digits, then ILLY (e.g., CYA123456ILLY)</div>
@@ -794,14 +809,23 @@
                 const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value;
                 if (present === 'yes') {
                     const stickerInput = document.getElementById(`sticker_${index}`);
+                    const locationInput = document.getElementById(`location_${index}`);
                     const code = stickerInput.value.trim();
+                    const location = locationInput.value.trim();
+                    
+                    if (!location) {
+                        alert(`Please specify the location for Asset #${index + 1} (${asset.Description})`);
+                        locationInput.focus();
+                        validationFailed = true;
+                        return;
+                    }
                     
                     if (!code) {
                         alert(`Please enter a sticker code for Asset #${index + 1} (${asset.Description})`);
                         stickerInput.focus();
                         validationFailed = true;
                         return;
-	}
+                    }
                     
                     if (!validateStickerCode(index)) {
                         alert(`Invalid sticker code format for Asset #${index + 1}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
@@ -821,10 +845,11 @@
                     const machineDiv = document.getElementById(`additionalMachine_${i}`);
                     if (machineDiv) {
                         const serial = document.getElementById(`addSerial_${i}`)?.value;
+                        const location = document.getElementById(`addLocation_${i}`)?.value;
                         const sticker = document.getElementById(`addSticker_${i}`)?.value;
                         
-                        if (!serial || !sticker) {
-                            alert(`Please fill in all required fields for Additional Machine #${i} (Serial Number and Sticker Code are mandatory).`);
+                        if (!serial || !location || !sticker) {
+                            alert(`Please fill in all required fields for Additional Machine #${i} (Serial Number, Location, and Sticker Code are mandatory).`);
                             validationFailed = true;
                             break;
                         }
@@ -863,11 +888,13 @@
             currentAccountData.forEach((asset, index) => {
                 const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value || '';
                 const sticker = document.getElementById(`sticker_${index}`).value;
+                const location = document.getElementById(`location_${index}`).value;
                 
                 formData.assets.push({
                     description: asset.Description || '',
                     serialNumber: asset.SerialNumber || '',
                     present: present,
+                    location: present === 'yes' ? location : '',
                     stickerCode: present === 'yes' ? sticker : ''
                 });
             });
@@ -882,6 +909,7 @@
                         const makeOther = document.getElementById(`addMakeOther_${i}`)?.value || '';
                         const model = document.getElementById(`addModel_${i}`)?.value || '';
                         const serial = document.getElementById(`addSerial_${i}`)?.value || '';
+                        const location = document.getElementById(`addLocation_${i}`)?.value || '';
                         const sticker = document.getElementById(`addSticker_${i}`)?.value || '';
                         
                         formData.additionalMachines.push({
@@ -889,6 +917,7 @@
                             make: make === 'Other' ? makeOther : make,
                             model: model,
                             serialNumber: serial,
+                            location: location,
                             stickerCode: sticker
                         });
                     }
