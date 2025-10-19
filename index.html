@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loaned Equipment Verification - Illy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo-container img {
+            max-width: 200px;
+            height: auto;
+        }
+        
+        h1 {
+            color: #c8102e;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        h2 {
+            color: #333;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 20px;
+            border-bottom: 2px solid #c8102e;
+            padding-bottom: 5px;
+        }
+        
+        h3 {
+            color: #555;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .required::after {
+            content: "*";
+            color: #c8102e;
+            margin-left: 4px;
+        }
+        
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        input.invalid {
+            border-color: #c8102e;
+            background-color: #fff5f5;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #c8102e;
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin: 10px 0;
+        }
+        
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        
+        .radio-group input[type="radio"] {
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        
+        .asset-card {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .asset-header {
+            font-weight: bold;
+            color: #c8102e;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .asset-info {
+            margin-bottom: 15px;
+        }
+        
+        .asset-info strong {
+            color: #555;
+        }
+        
+        .sticker-field {
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .sticker-field.show {
+            display: block;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .add-machine-btn {
+            background-color: #2196F3;
+            margin-top: 15px;
+        }
+        
+        .add-machine-btn:hover {
+            background-color: #0b7dda;
+        }
+        
+        .submit-btn {
+            background-color: #c8102e;
+            font-size: 18px;
+            padding: 15px 40px;
+            display: block;
+            margin: 30px auto;
+            font-weight: bold;
+        }
+        
+        .submit-btn:hover {
+            background-color: #a00d24;
+        }
+        
+        .intro-text {
+            background-color: #f0f8ff;
+            padding: 20px;
+            border-left: 4px solid #2196F3;
+            margin-bottom: 25px;
+            border-radius: 4px;
+        }
+        
+        .thank-you {
+            background-color: #e8f5e9;
+            padding: 20px;
+            border-left: 4px solid #4CAF50;
+            margin-top: 30px;
+            border-radius: 4px;
+        }
+        
+        .additional-machine {
+            background-color: #fff8e1;
+            border: 2px dashed #ffa726;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .remove-machine-btn {
+            background-color: #f44336;
+            padding: 8px 16px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .remove-machine-btn:hover {
+            background-color: #da190b;
+        }
+        
+        .conditional-field {
+            display: none;
+            margin-top: 10px;
+        }
+        
+        .conditional-field.show {
+            display: block;
+        }
+        
+        .error {
+            color: #c8102e;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .validation-error {
+            color: #c8102e;
+            font-size: 13px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .validation-error.show {
+            display: block;
+        }
+        
+        .account-search {
+            background-color: #fff3e0;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+        
+        #accountNumberInput {
+            max-width: 300px;
+        }
+        
+        .search-btn {
+            background-color: #c8102e;
+            margin-left: 10px;
+        }
+        
+        .search-btn:hover {
+            background-color: #a00d24;
+        }
+        
+        #formContent {
+            display: none;
+        }
+        
+        .note {
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+            margin-top: 5px;
+        }
+        
+        .success-message {
+            background-color: #e8f5e9;
+            border: 2px solid #4CAF50;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .success-message h2 {
+            color: #4CAF50;
+            border: none;
+            margin-bottom: 15px;
+        }
+        
+        .error-message {
+            background-color: #ffebee;
+            border: 2px solid #f44336;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .error-message h2 {
+            color: #f44336;
+            border: none;
+            margin-bottom: 15px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        
+        .sticker-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Logo -->
+        <div class="logo-container">
+            <img src="illycaffe_logo_PRINT_CMYK_RED_80mm_JPG.jpg" alt="illycaffè Logo">
+        </div>
+        
+        <h1>Loaned Equipment Verification</h1>
+        
+        <!-- Account Number Search Section -->
+        <div class="account-search">
+            <div class="form-group">
+                <label for="accountNumberInput" class="required">Account #</label>
+                <div style="display: flex; align-items: center;">
+                    <input type="text" id="accountNumberInput" placeholder="Enter your account number">
+                    <button class="search-btn" onclick="loadAccountData()">Load Account</button>
+                </div>
+                <div id="accountError" class="error">Account not found. Please check the account number.</div>
+                <div class="loading" id="loadingAccount">Loading account data</div>
+            </div>
+        </div>
+        
+        <!-- Main Form (Hidden until account is loaded) -->
+        <div id="formContent">
+            <form id="verificationForm">
+                <!-- Customer Info -->
+                <div style="text-align: center; background-color: #f0f0f0; padding: 30px; border-radius: 6px; margin-bottom: 30px;">
+                    <div style="font-size: 32px; font-weight: bold; color: #c8102e; margin-bottom: 10px;" id="customerName">-</div>
+                    <div style="font-size: 16px; color: #555;" id="customerAddress">-</div>
+                </div>
+                
+                <div class="intro-text">
+                    <p>Please verify the loaned equipment at your location by completing this form. This verification helps Illy maintain accurate asset records and supports our year-end audit requirements.</p>
+                    <p style="margin-top: 10px;">For each machine listed, confirm if it is present and apply the provided identification sticker. Record the sticker code in the corresponding field.</p>
+                    <p style="margin-top: 10px;">Add any unlisted equipment in the final section.</p>
+                </div>
+                
+                <h2>Please verify each machine listed below:</h2>
+                
+                <!-- Assets will be dynamically inserted here -->
+                <div id="assetsContainer"></div>
+                
+                <!-- Additional Equipment Section -->
+                <h2>Additional Equipment Not Listed Above</h2>
+                
+                <div class="form-group">
+                    <label>Do you have additional equipment not listed above?</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="hasAdditional" value="yes" onchange="toggleAdditionalEquipment()"> Yes
+                        </label>
+                        <label>
+                            <input type="radio" name="hasAdditional" value="no" checked onchange="toggleAdditionalEquipment()"> No
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="additionalEquipmentSection" style="display: none;">
+                    <div id="additionalMachinesContainer"></div>
+                    <button type="button" class="add-machine-btn" onclick="addAdditionalMachine()">+ Add Another Machine</button>
+                </div>
+                
+                <!-- Notes Section -->
+                <h2>Notes or Comments (Optional)</h2>
+                <div class="form-group">
+                    <textarea id="notes" placeholder="Any additional information about the equipment"></textarea>
+                </div>
+                
+                <!-- Thank You Section -->
+                <div class="thank-you">
+                    <h3 style="margin-top: 0;">Thank You</h3>
+                    <p>Thank you for taking the time to complete this asset verification. Your cooperation helps us maintain accurate records and ensures compliance with our year-end audit requirements.</p>
+                    <p style="margin-top: 10px;">If you have any questions or need assistance, please don't hesitate to contact your Sales Representative or email us at <a href="mailto:CYA@illy.com">CYA@illy.com</a> (Fixed Asset Manager).</p>
+                </div>
+                
+                <!-- Contact Information -->
+                <h2>Contact Information</h2>
+                <p style="margin-bottom: 15px; color: #555;">In case we need to request pictures of the machines, who should we contact?</p>
+                
+                <div class="form-group">
+                    <label for="contactName" class="required">Contact Name</label>
+                    <input type="text" id="contactName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contactEmail" class="required">Email Address</label>
+                    <input type="email" id="contactEmail" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contactPhone">Phone Number (Optional)</label>
+                    <input type="tel" id="contactPhone">
+                </div>
+                
+                <!-- Form Completion -->
+                <h2>Form Completion</h2>
+                
+                <div class="form-group">
+                    <label for="completedBy" class="required">Full Name (Person completing this form)</label>
+                    <input type="text" id="completedBy" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="completionDate" class="required">Date</label>
+                    <input type="date" id="completionDate" required>
+                </div>
+                
+                <p class="note">Required fields are marked with an asterisk (*)</p>
+                
+                <div class="loading" id="loadingMessage">Submitting form</div>
+                
+                <button type="submit" class="submit-btn" id="submitBtn">SUBMIT</button>
+            </form>
+        </div>
+        
+        <!-- Success Message -->
+        <div class="success-message" id="successMessage">
+            <h2>Form submitted successfully!</h2>
+            <p>Your verification has been recorded.</p>
+            <p style="margin-top: 15px;">Thank you for completing the asset verification form.</p>
+            <button onclick="location.reload()" style="margin-top: 20px; background-color: #c8102e;">Submit Another Form</button>
+        </div>
+        
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage">
+            <h2>Submission Error</h2>
+            <p id="errorText">There was an error submitting the form. Please try again.</p>
+            <button onclick="hideError()" style="margin-top: 20px; background-color: #f44336;">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Google Apps Script URL
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUOVQJ5hxt4IWgTmdIQDl9MhZu1k7vDrgHLXeVqdgv7rbWxByHmm3pBjFzQ2o5YE1p/exec';
+        
+        let currentAccountData = [];
+        let additionalMachineCount = 0;
+
+        // Set today's date on page load
+        window.onload = function() {
+            document.getElementById('completionDate').valueAsDate = new Date();
+        };
+
+        // Load account data from Google Apps Script
+        async function loadAccountData() {
+            const accountNumber = document.getElementById('accountNumberInput').value.trim();
+            const errorDiv = document.getElementById('accountError');
+            const loadingDiv = document.getElementById('loadingAccount');
+            
+            if (accountNumber === '') {
+                errorDiv.textContent = 'Please enter an account number.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Show loading
+            loadingDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+            document.getElementById('formContent').style.display = 'none';
+            
+            try {
+                // Call Google Apps Script
+                const response = await fetch(`${SCRIPT_URL}?accountNumber=${encodeURIComponent(accountNumber)}`);
+                const result = await response.json();
+                
+                // Hide loading
+                loadingDiv.style.display = 'none';
+                
+                if (!result.success) {
+                    errorDiv.textContent = result.message || 'Account not found. Please check the account number.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+                
+                // Store account data
+                currentAccountData = result.data;
+                
+                // Display form
+                document.getElementById('formContent').style.display = 'block';
+                
+                // Set customer name and address
+                const firstRecord = currentAccountData[0];
+                document.getElementById('customerName').textContent = firstRecord.CustomerName || 'Unknown';
+                
+                const address = firstRecord.Address || '';
+                const city = firstRecord.City || '';
+                const state = firstRecord.State || '';
+                const zip = firstRecord.Zip || '';
+                const addressLine1 = address;
+                const addressLine2 = `${city}, ${state} ${zip}`.trim();
+                const fullAddress = addressLine1 + (addressLine2 ? '<br>' + addressLine2 : '');
+                document.getElementById('customerAddress').innerHTML = fullAddress || 'Address not available';
+                
+                // Generate asset cards
+                generateAssetCards();
+                
+                // Scroll to form
+                document.getElementById('formContent').scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                errorDiv.textContent = 'Error loading account data: ' + error.message;
+                errorDiv.style.display = 'block';
+                console.error('Error:', error);
+            }
+        }
+
+        function generateAssetCards() {
+            const container = document.getElementById('assetsContainer');
+            container.innerHTML = '';
+            
+            currentAccountData.forEach((asset, index) => {
+                const assetCard = document.createElement('div');
+                assetCard.className = 'asset-card';
+                assetCard.innerHTML = `
+                    <div class="asset-header">Asset #${index + 1}</div>
+                    <div class="asset-info">
+                        <strong>Equipment:</strong> ${asset.Description || 'N/A'}
+                    </div>
+                    <div class="asset-info">
+                        <strong>Serial Number:</strong> ${asset.SerialNumber || 'N/A'}
+                    </div>
+                    <div class="form-group">
+                        <label>Is this Serial Number currently at your location?</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="asset_${index}_present" value="yes" onchange="toggleStickerField(${index}, true)"> Yes
+                            </label>
+                            <label>
+                                <input type="radio" name="asset_${index}_present" value="no" onchange="toggleStickerField(${index}, false)"> No
+                            </label>
+                        </div>
+                    </div>
+                    <div id="stickerField_${index}" class="sticker-field">
+                        <label class="required">If Yes, please apply a sticker to this machine and enter the sticker code below:</label>
+                        <input type="text" id="sticker_${index}" placeholder="e.g., CYA102030ILLY" oninput="validateStickerCode(${index})">
+                        <div class="sticker-hint">Format: CYA followed by 6 digits, then ILLY (e.g., CYA123456ILLY)</div>
+                        <div id="stickerError_${index}" class="validation-error">Invalid format. Code must be: CYA + 6 digits + ILLY (e.g., CYA123456ILLY)</div>
+                    </div>
+                `;
+                container.appendChild(assetCard);
+            });
+        }
+
+        function toggleStickerField(index, show) {
+            const stickerField = document.getElementById(`stickerField_${index}`);
+            const stickerInput = document.getElementById(`sticker_${index}`);
+            const stickerError = document.getElementById(`stickerError_${index}`);
+            
+            if (show) {
+                stickerField.classList.add('show');
+                stickerInput.required = true;
+            } else {
+                stickerField.classList.remove('show');
+                stickerInput.required = false;
+                stickerInput.value = '';
+                stickerInput.classList.remove('invalid');
+                stickerError.classList.remove('show');
+            }
+        }
+
+        function validateStickerCode(index) {
+            const stickerInput = document.getElementById(`sticker_${index}`);
+            const stickerError = document.getElementById(`stickerError_${index}`);
+            const code = stickerInput.value.trim();
+            
+            const pattern = /^CYA\d{6}ILLY$/;
+            
+            if (code && !pattern.test(code)) {
+                stickerInput.classList.add('invalid');
+                stickerError.classList.add('show');
+                return false;
+            } else {
+                stickerInput.classList.remove('invalid');
+                stickerError.classList.remove('show');
+                return true;
+            }
+        }
+
+        function validateAdditionalStickerCode(id) {
+            const stickerInput = document.getElementById(`addSticker_${id}`);
+            const stickerError = document.getElementById(`addStickerError_${id}`);
+            const code = stickerInput.value.trim();
+            
+            const pattern = /^CYA\d{6}ILLY$/;
+            
+            if (code && !pattern.test(code)) {
+                stickerInput.classList.add('invalid');
+                stickerError.classList.add('show');
+                return false;
+            } else {
+                stickerInput.classList.remove('invalid');
+                stickerError.classList.remove('show');
+                return true;
+            }
+        }
+
+        function toggleAdditionalEquipment() {
+            const hasAdditional = document.querySelector('input[name="hasAdditional"]:checked').value;
+            const section = document.getElementById('additionalEquipmentSection');
+            
+            if (hasAdditional === 'yes') {
+                section.style.display = 'block';
+                if (additionalMachineCount === 0) {
+                    addAdditionalMachine();
+                }
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        function addAdditionalMachine() {
+            additionalMachineCount++;
+            const container = document.getElementById('additionalMachinesContainer');
+            
+            const machineDiv = document.createElement('div');
+            machineDiv.className = 'additional-machine';
+            machineDiv.id = `additionalMachine_${additionalMachineCount}`;
+            machineDiv.innerHTML = `
+                <h3>Additional Machine #${additionalMachineCount}</h3>
+                
+                <div class="form-group">
+                    <label class="required">Machine Type</label>
+                    <select id="addType_${additionalMachineCount}" required>
+                        <option value="">Select...</option>
+                        <option value="Capsule Machine">Capsule Machine</option>
+                        <option value="Cart">Cart</option>
+                        <option value="Coffee & Tea Brewer">Coffee & Tea Brewer</option>
+                        <option value="Coffee Brewer">Coffee Brewer</option>
+                        <option value="Coffee Grinder">Coffee Grinder</option>
+                        <option value="Cold Brew">Cold Brew</option>
+                        <option value="Dispenser">Dispenser</option>
+                        <option value="Espresso Grinder">Espresso Grinder</option>
+                        <option value="Espresso Machine">Espresso Machine</option>
+                        <option value="Granita Maker">Granita Maker</option>
+                        <option value="Hot Water Dispenser">Hot Water Dispenser</option>
+                        <option value="Iced Tea Brewer">Iced Tea Brewer</option>
+                        <option value="Milk Cooler">Milk Cooler</option>
+                        <option value="Specialty Brewer">Specialty Brewer</option>
+                        <option value="Super Automatic">Super Automatic</option>
+                        <option value="Vending Machine">Vending Machine</option>
+                        <option value="Other Coffee Machines">Other Coffee Machines</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="required">Make</label>
+                    <select id="addMake_${additionalMachineCount}" onchange="toggleOtherMake(${additionalMachineCount})" required>
+                        <option value="">Select...</option>
+                        <option value="Fetco">Fetco</option>
+                        <option value="Brood Refreshments">Brood Refreshments</option>
+                        <option value="Bunn">Bunn</option>
+                        <option value="Curtis">Curtis</option>
+                        <option value="Casadio">Casadio</option>
+                        <option value="Cimbali Group">Cimbali Group</option>
+                        <option value="Compak">Compak</option>
+                        <option value="Dammann">Dammann</option>
+                        <option value="Eversys">Eversys</option>
+                        <option value="Fas Vending">Fas Vending</option>
+                        <option value="Ferla">Ferla</option>
+                        <option value="HLF">HLF</option>
+                        <option value="illy">illy</option>
+                        <option value="La Marzocco">La Marzocco</option>
+                        <option value="Jura">Jura</option>
+                        <option value="Mazzer">Mazzer</option>
+                        <option value="Nuova Simonelli">Nuova Simonelli</option>
+                        <option value="Pasquini">Pasquini</option>
+                        <option value="Slayer">Slayer</option>
+                        <option value="SPM">SPM</option>
+                        <option value="UNIC">UNIC</option>
+                        <option value="Victoria Arduino">Victoria Arduino</option>
+                        <option value="Vitifrigo">Vitifrigo</option>
+                        <option value="Wittenborg">Wittenborg</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <div id="otherMakeField_${additionalMachineCount}" class="conditional-field">
+                    <label>If "Other," please specify:</label>
+                    <input type="text" id="addMakeOther_${additionalMachineCount}">
+                </div>
+                
+                <div class="form-group">
+                    <label>Model</label>
+                    <input type="text" id="addModel_${additionalMachineCount}" placeholder="e.g., K10 WBC, CBS-2131XTS, Aurelia II">
+                </div>
+                
+                <div class="form-group">
+                    <label class="required">Serial Number</label>
+                    <input type="text" id="addSerial_${additionalMachineCount}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="required">Sticker Code Applied</label>
+                    <input type="text" id="addSticker_${additionalMachineCount}" placeholder="e.g., CYA102030ILLY" oninput="validateAdditionalStickerCode(${additionalMachineCount})" required>
+                    <div class="sticker-hint">Format: CYA followed by 6 digits, then ILLY (e.g., CYA123456ILLY)</div>
+                    <div id="addStickerError_${additionalMachineCount}" class="validation-error">Invalid format. Code must be: CYA + 6 digits + ILLY (e.g., CYA123456ILLY)</div>
+                </div>
+                
+                <button type="button" class="remove-machine-btn" onclick="removeAdditionalMachine(${additionalMachineCount})">Remove Machine</button>
+            `;
+            
+            container.appendChild(machineDiv);
+        }
+
+        function removeAdditionalMachine(id) {
+            const machine = document.getElementById(`additionalMachine_${id}`);
+            machine.remove();
+        }
+
+        function toggleOtherMake(id) {
+            const makeSelect = document.getElementById(`addMake_${id}`);
+            const otherField = document.getElementById(`otherMakeField_${id}`);
+            
+            if (makeSelect.value === 'Other') {
+                otherField.classList.add('show');
+            } else {
+                otherField.classList.remove('show');
+                document.getElementById(`addMakeOther_${id}`).value = '';
+            }
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('formContent').style.display = 'block';
+        }
+
+        // Form submission
+        document.getElementById('verificationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Validate all sticker codes for listed assets
+            let validationFailed = false;
+            
+            currentAccountData.forEach((asset, index) => {
+                const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value;
+                if (present === 'yes') {
+                    const stickerInput = document.getElementById(`sticker_${index}`);
+                    const code = stickerInput.value.trim();
+                    
+                    if (!code) {
+                        alert(`Please enter a sticker code for Asset #${index + 1} (${asset.Description})`);
+                        stickerInput.focus();
+                        validationFailed = true;
+                        return;
+	}
+                    
+                    if (!validateStickerCode(index)) {
+                        alert(`Invalid sticker code format for Asset #${index + 1}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
+                        stickerInput.focus();
+                        validationFailed = true;
+                        return;
+                    }
+                }
+            });
+            
+            if (validationFailed) return;
+            
+            // Validate additional equipment fields if applicable
+            const hasAdditional = document.querySelector('input[name="hasAdditional"]:checked').value;
+            if (hasAdditional === 'yes') {
+                for (let i = 1; i <= additionalMachineCount; i++) {
+                    const machineDiv = document.getElementById(`additionalMachine_${i}`);
+                    if (machineDiv) {
+                        const serial = document.getElementById(`addSerial_${i}`)?.value;
+                        const sticker = document.getElementById(`addSticker_${i}`)?.value;
+                        
+                        if (!serial || !sticker) {
+                            alert(`Please fill in all required fields for Additional Machine #${i} (Serial Number and Sticker Code are mandatory).`);
+                            validationFailed = true;
+                            break;
+                        }
+                        
+                        if (!validateAdditionalStickerCode(i)) {
+                            alert(`Invalid sticker code format for Additional Machine #${i}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
+                            document.getElementById(`addSticker_${i}`).focus();
+                            validationFailed = true;
+                            break;
+                        }
+                    }
+                }
+                if (validationFailed) return;
+            }
+            
+            // Show loading, disable submit button
+            document.getElementById('loadingMessage').style.display = 'block';
+            document.getElementById('submitBtn').disabled = true;
+            
+            // Collect form data
+            const formData = {
+                accountNumber: document.getElementById('accountNumberInput').value,
+                customerName: document.getElementById('customerName').textContent,
+                customerAddress: document.getElementById('customerAddress').textContent.replace(/<br>/g, ', '),
+                assets: [],
+                additionalMachines: [],
+                notes: document.getElementById('notes').value,
+                contactName: document.getElementById('contactName').value,
+                contactEmail: document.getElementById('contactEmail').value,
+                contactPhone: document.getElementById('contactPhone').value,
+                completedBy: document.getElementById('completedBy').value,
+                completionDate: document.getElementById('completionDate').value
+            };
+            
+            // Collect asset data
+            currentAccountData.forEach((asset, index) => {
+                const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value || '';
+                const sticker = document.getElementById(`sticker_${index}`).value;
+                
+                formData.assets.push({
+                    description: asset.Description || '',
+                    serialNumber: asset.SerialNumber || '',
+                    present: present,
+                    stickerCode: present === 'yes' ? sticker : ''
+                });
+            });
+            
+            // Collect additional machines
+            if (hasAdditional === 'yes') {
+                for (let i = 1; i <= additionalMachineCount; i++) {
+                    const machineDiv = document.getElementById(`additionalMachine_${i}`);
+                    if (machineDiv) {
+                        const type = document.getElementById(`addType_${i}`)?.value || '';
+                        const make = document.getElementById(`addMake_${i}`)?.value || '';
+                        const makeOther = document.getElementById(`addMakeOther_${i}`)?.value || '';
+                        const model = document.getElementById(`addModel_${i}`)?.value || '';
+                        const serial = document.getElementById(`addSerial_${i}`)?.value || '';
+                        const sticker = document.getElementById(`addSticker_${i}`)?.value || '';
+                        
+                        formData.additionalMachines.push({
+                            type: type,
+                            make: make === 'Other' ? makeOther : make,
+                            model: model,
+                            serialNumber: serial,
+                            stickerCode: sticker
+                        });
+                    }
+                }
+            }
+            
+            // Send data to Google Apps Script
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                // Note: With no-cors mode, we can't read the response
+                // But the data will still be saved to Google Sheets
+                
+                // Hide loading
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+                
+                // Show success message
+                document.getElementById('formContent').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+                
+                // Scroll to success message
+                document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                // Hide loading
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+                
+                // Show error message
+                document.getElementById('formContent').style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('errorText').textContent = 'Error: ' + error.message;
+                
+                // Scroll to error message
+                document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    </script>
+</body>
+</html>
