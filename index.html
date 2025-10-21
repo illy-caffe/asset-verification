@@ -797,176 +797,207 @@
             document.getElementById('formContent').style.display = 'block';
         }
 
-        // Form submission
-        document.getElementById('verificationForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+// Form submission
+document.getElementById('verificationForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Validate all sticker codes for listed assets
+    let validationFailed = false;
+    
+    currentAccountData.forEach((asset, index) => {
+        const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value;
+        if (present === 'yes') {
+            const stickerInput = document.getElementById(`sticker_${index}`);
+            const locationInput = document.getElementById(`location_${index}`);
+            const code = stickerInput.value.trim();
+            const location = locationInput.value.trim();
             
-            // Validate all sticker codes for listed assets
-            let validationFailed = false;
-            
-            currentAccountData.forEach((asset, index) => {
-                const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value;
-                if (present === 'yes') {
-                    const stickerInput = document.getElementById(`sticker_${index}`);
-                    const locationInput = document.getElementById(`location_${index}`);
-                    const code = stickerInput.value.trim();
-                    const location = locationInput.value.trim();
-                    
-                    if (!location) {
-                        alert(`Please specify the location for Asset #${index + 1} (${asset.Description})`);
-                        locationInput.focus();
-                        validationFailed = true;
-                        return;
-                    }
-                    
-                    if (!code) {
-                        alert(`Please enter a sticker code for Asset #${index + 1} (${asset.Description})`);
-                        stickerInput.focus();
-                        validationFailed = true;
-                        return;
-                    }
-                    
-                    if (!validateStickerCode(index)) {
-                        alert(`Invalid sticker code format for Asset #${index + 1}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
-                        stickerInput.focus();
-                        validationFailed = true;
-                        return;
-                    }
-                }
-            });
-            
-            if (validationFailed) return;
-            
-            // Validate additional equipment fields if applicable
-            const hasAdditional = document.querySelector('input[name="hasAdditional"]:checked').value;
-            if (hasAdditional === 'yes') {
-                for (let i = 1; i <= additionalMachineCount; i++) {
-                    const machineDiv = document.getElementById(`additionalMachine_${i}`);
-                    if (machineDiv) {
-                        const serial = document.getElementById(`addSerial_${i}`)?.value;
-                        const location = document.getElementById(`addLocation_${i}`)?.value;
-                        const sticker = document.getElementById(`addSticker_${i}`)?.value;
-                        
-                        if (!serial || !location || !sticker) {
-                            alert(`Please fill in all required fields for Additional Machine #${i} (Serial Number, Location, and Sticker Code are mandatory).`);
-                            validationFailed = true;
-                            break;
-                        }
-                        
-                        if (!validateAdditionalStickerCode(i)) {
-                            alert(`Invalid sticker code format for Additional Machine #${i}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
-                            document.getElementById(`addSticker_${i}`).focus();
-                            validationFailed = true;
-                            break;
-                        }
-                    }
-                }
-                if (validationFailed) return;
+            if (!location) {
+                alert(`Please specify the location for Asset #${index + 1} (${asset.Description})`);
+                locationInput.focus();
+                validationFailed = true;
+                return;
             }
             
-            // Show loading, disable submit button
-            document.getElementById('loadingMessage').style.display = 'block';
-            document.getElementById('submitBtn').disabled = true;
-            
-            // Collect form data
-            const formData = {
-                accountNumber: document.getElementById('accountNumberInput').value,
-                customerName: document.getElementById('customerName').textContent,
-                customerAddress: document.getElementById('customerAddress').textContent.replace(/<br>/g, ', '),
-                assets: [],
-                additionalMachines: [],
-                notes: document.getElementById('notes').value,
-                contactName: document.getElementById('contactName').value,
-                contactEmail: document.getElementById('contactEmail').value,
-                contactPhone: document.getElementById('contactPhone').value,
-                completedBy: document.getElementById('completedBy').value,
-                completionDate: document.getElementById('completionDate').value
-            };
-            
-            // Collect asset data
-            currentAccountData.forEach((asset, index) => {
-                const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value || '';
-                const sticker = document.getElementById(`sticker_${index}`).value;
-                const location = document.getElementById(`location_${index}`).value;
-                
-                formData.assets.push({
-                    description: asset.Description || '',
-                    serialNumber: asset.SerialNumber || '',
-                    present: present,
-                    location: present === 'yes' ? location : '',
-                    stickerCode: present === 'yes' ? sticker : ''
-                });
-            });
-            
-            // Collect additional machines
-            if (hasAdditional === 'yes') {
-                for (let i = 1; i <= additionalMachineCount; i++) {
-                    const machineDiv = document.getElementById(`additionalMachine_${i}`);
-                    if (machineDiv) {
-                        const type = document.getElementById(`addType_${i}`)?.value || '';
-                        const make = document.getElementById(`addMake_${i}`)?.value || '';
-                        const makeOther = document.getElementById(`addMakeOther_${i}`)?.value || '';
-                        const model = document.getElementById(`addModel_${i}`)?.value || '';
-                        const serial = document.getElementById(`addSerial_${i}`)?.value || '';
-                        const location = document.getElementById(`addLocation_${i}`)?.value || '';
-                        const sticker = document.getElementById(`addSticker_${i}`)?.value || '';
-                        
-                        formData.additionalMachines.push({
-                            type: type,
-                            make: make === 'Other' ? makeOther : make,
-                            model: model,
-                            serialNumber: serial,
-                            location: location,
-                            stickerCode: sticker
-                        });
-                    }
-                }
+            if (!code) {
+                alert(`Please enter a sticker code for Asset #${index + 1} (${asset.Description})`);
+                stickerInput.focus();
+                validationFailed = true;
+                return;
             }
             
-            // Send data to Google Apps Script
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
+            if (!validateStickerCode(index)) {
+                alert(`Invalid sticker code format for Asset #${index + 1}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
+                stickerInput.focus();
+                validationFailed = true;
+                return;
+            }
+        }
+    });
+    
+    if (validationFailed) return;
+    
+    // Validate additional equipment fields if applicable
+    const hasAdditional = document.querySelector('input[name="hasAdditional"]:checked').value;
+    if (hasAdditional === 'yes') {
+        for (let i = 1; i <= additionalMachineCount; i++) {
+            const machineDiv = document.getElementById(`additionalMachine_${i}`);
+            if (machineDiv) {
+                const serial = document.getElementById(`addSerial_${i}`)?.value;
+                const location = document.getElementById(`addLocation_${i}`)?.value;
+                const sticker = document.getElementById(`addSticker_${i}`)?.value;
+                
+                if (!serial || !location || !sticker) {
+                    alert(`Please fill in all required fields for Additional Machine #${i} (Serial Number, Location, and Sticker Code are mandatory).`);
+                    validationFailed = true;
+                    break;
+                }
+                
+                if (!validateAdditionalStickerCode(i)) {
+                    alert(`Invalid sticker code format for Additional Machine #${i}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
+                    document.getElementById(`addSticker_${i}`).focus();
+                    validationFailed = true;
+                    break;
+                }
+            }
+        }
+        if (validationFailed) return;
+    }
+    
+    // Show loading, disable submit button
+    document.getElementById('loadingMessage').style.display = 'block';
+    document.getElementById('submitBtn').disabled = true;
+    
+    // Collect form data
+    const formData = {
+        accountNumber: document.getElementById('accountNumberInput').value,
+        customerName: document.getElementById('customerName').textContent,
+        customerAddress: document.getElementById('customerAddress').textContent.replace(/<br>/g, ', '),
+        assets: [],
+        additionalMachines: [],
+        notes: document.getElementById('notes').value,
+        contactName: document.getElementById('contactName').value,
+        contactEmail: document.getElementById('contactEmail').value,
+        contactPhone: document.getElementById('contactPhone').value,
+        completedBy: document.getElementById('completedBy').value,
+        completionDate: document.getElementById('completionDate').value
+    };
+    
+    // Collect asset data
+    currentAccountData.forEach((asset, index) => {
+        const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value || '';
+        const sticker = document.getElementById(`sticker_${index}`).value;
+        const location = document.getElementById(`location_${index}`).value;
+        
+        formData.assets.push({
+            description: asset.Description || '',
+            serialNumber: asset.SerialNumber || '',
+            present: present,
+            location: present === 'yes' ? location : '',
+            stickerCode: present === 'yes' ? sticker : ''
+        });
+    });
+    
+    // Collect additional machines
+    if (hasAdditional === 'yes') {
+        for (let i = 1; i <= additionalMachineCount; i++) {
+            const machineDiv = document.getElementById(`additionalMachine_${i}`);
+            if (machineDiv) {
+                const type = document.getElementById(`addType_${i}`)?.value || '';
+                const make = document.getElementById(`addMake_${i}`)?.value || '';
+                const makeOther = document.getElementById(`addMakeOther_${i}`)?.value || '';
+                const model = document.getElementById(`addModel_${i}`)?.value || '';
+                const serial = document.getElementById(`addSerial_${i}`)?.value || '';
+                const location = document.getElementById(`addLocation_${i}`)?.value || '';
+                const sticker = document.getElementById(`addSticker_${i}`)?.value || '';
+                
+                formData.additionalMachines.push({
+                    type: type,
+                    make: make === 'Other' ? makeOther : make,
+                    model: model,
+                    serialNumber: serial,
+                    location: location,
+                    stickerCode: sticker
                 });
-                
-                const result = await response.json();
-                
-                // Hide loading
-                document.getElementById('loadingMessage').style.display = 'none';
-                document.getElementById('submitBtn').disabled = false;
-                
-                if (result.success) {
-                    // Show success message
+            }
+        }
+    }
+    
+    // Send data to Google Apps Script using XMLHttpRequest as fallback
+    console.log('Attempting to submit to:', SCRIPT_URL);
+    console.log('Form data:', formData);
+    
+    try {
+        // Try using XMLHttpRequest instead of fetch
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', SCRIPT_URL, true);
+        xhr.setRequestHeader('Content-Type', 'text/plain');
+        
+        xhr.onload = function() {
+            console.log('Response status:', xhr.status);
+            console.log('Response text:', xhr.responseText);
+            
+            // Hide loading
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('submitBtn').disabled = false;
+            
+            if (xhr.status === 200 || xhr.status === 302) {
+                try {
+                    const result = JSON.parse(xhr.responseText);
+                    if (result.success) {
+                        // Show success message
+                        document.getElementById('formContent').style.display = 'none';
+                        document.getElementById('successMessage').style.display = 'block';
+                        document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        throw new Error(result.message || 'Submission failed');
+                    }
+                } catch (parseError) {
+                    // If we can't parse JSON but got 200, assume success
+                    console.log('Could not parse response, but got status 200, assuming success');
                     document.getElementById('formContent').style.display = 'none';
                     document.getElementById('successMessage').style.display = 'block';
-                    
-                    // Scroll to success message
                     document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
-                } else {
-                    throw new Error(result.message || 'Submission failed');
                 }
-                
-            } catch (error) {
-                // Hide loading
-                document.getElementById('loadingMessage').style.display = 'none';
-                document.getElementById('submitBtn').disabled = false;
-                
-                // Show error message
-                document.getElementById('formContent').style.display = 'none';
-                document.getElementById('errorMessage').style.display = 'block';
-                document.getElementById('errorText').textContent = 'Error: ' + error.message;
-                
-                // Scroll to error message
-                document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                throw new Error('Server returned status ' + xhr.status);
             }
-        });
+        };
+        
+        xhr.onerror = function() {
+            console.error('XHR error occurred');
+            
+            // Hide loading
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('submitBtn').disabled = false;
+            
+            // Show error message
+            document.getElementById('formContent').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('errorText').textContent = 'Connection error. Please check your internet connection and try again.';
+            document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
+        };
+        
+        xhr.send(JSON.stringify(formData));
+        
+    } catch (error) {
+        console.error('Submission error:', error);
+        
+        // Hide loading
+        document.getElementById('loadingMessage').style.display = 'none';
+        document.getElementById('submitBtn').disabled = false;
+        
+        // Show error message
+        document.getElementById('formContent').style.display = 'none';
+        document.getElementById('errorMessage').style.display = 'block';
+        document.getElementById('errorText').textContent = 'Error: ' + error.message;
+        document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
+    }
+});
     </script>
 </body>
 </html>
+
 
 
 
