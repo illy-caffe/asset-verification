@@ -694,7 +694,7 @@
                         <div class="form-group">
                             <label class="required">Please apply a sticker to this machine and enter the sticker code below:</label>
                             <input type="text" id="sticker_${index}" placeholder="e.g., CYA102030ILLY" oninput="validateStickerCode(${index})">
-                            <div class="sticker-hint">Format: CYA followed by 6 digits, then ILLY (e.g., CYA123456ILLY)</div>
+                            <div class="sticker-hint">Format: CYA followed by 6 digits, then ILLY (e.g., CYA123456ILLY). Capitalize all letters!</div>
                             <div id="stickerError_${index}" class="validation-error">Invalid format. Code must be: CYA + 6 digits + ILLY (e.g., CYA123456ILLY)</div>
                         </div>
                     </div>
@@ -863,7 +863,7 @@
                     <label class="required">Sticker Code Applied</label>
                     <input type="text" id="addSticker_${additionalMachineCount}" placeholder="e.g., CYA102030ILLY" oninput="validateAdditionalStickerCode(${additionalMachineCount})" required>
                     <div class="sticker-hint">Format: CYA followed by 6 digits, then ILLY (e.g., CYA123456ILLY)</div>
-                    <div id="addStickerError_${additionalMachineCount}" class="validation-error">Invalid format. Code must be: CYA + 6 digits + ILLY (e.g., CYA123456ILLY)</div>
+                    <div id="addStickerError_${additionalMachineCount}" class="validation-error">Invalid format. Code must be: CYA + 6 digits + ILLY (e.g., CYA123456ILLY). Capitalize all letters!</div>
                 </div>
                 
                 <button type="button" class="remove-machine-btn" onclick="removeAdditionalMachine(${additionalMachineCount})">Remove Machine</button>
@@ -1100,4 +1100,5 @@
     </script>
 </body>
 </html>
+
 
