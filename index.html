@@ -785,8 +785,7 @@
             const makeSelect = document.getElementById(`addMake_${id}`);
             const otherField = document.getElementById(`otherMakeField_${id}`);
             
-            if (makeSelect.value === 'Other') {
-                otherField.classList.add('show');
+            if (makeSelect.value === 'Other') {otherField.classList.add('show');
             } else {
                 otherField.classList.remove('show');
                 document.getElementById(`addMakeOther_${id}`).value = '';
@@ -928,26 +927,28 @@
             try {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(formData)
                 });
                 
-                // Note: With no-cors mode, we can't read the response
-                // But the data will still be saved to Google Sheets
+                const result = await response.json();
                 
                 // Hide loading
                 document.getElementById('loadingMessage').style.display = 'none';
                 document.getElementById('submitBtn').disabled = false;
                 
-                // Show success message
-                document.getElementById('formContent').style.display = 'none';
-                document.getElementById('successMessage').style.display = 'block';
-                
-                // Scroll to success message
-                document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+                if (result.success) {
+                    // Show success message
+                    document.getElementById('formContent').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                    
+                    // Scroll to success message
+                    document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    throw new Error(result.message || 'Submission failed');
+                }
                 
             } catch (error) {
                 // Hide loading
@@ -966,4 +967,3 @@
     </script>
 </body>
 </html>
-
