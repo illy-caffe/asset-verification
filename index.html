@@ -488,7 +488,7 @@
     </div>
 
     <script>
-        // Google Apps Script URL
+        // Google Apps Script URL - UPDATE THIS WITH YOUR DEPLOYMENT URL
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyXBABjyiuPJeymayI_FMwvHH6VcFLfl6yPTkyICiD2pXVZh7oRqTzFY7aAtyeyAPd7/exec';
         
         let currentAccountData = [];
@@ -785,7 +785,8 @@
             const makeSelect = document.getElementById(`addMake_${id}`);
             const otherField = document.getElementById(`otherMakeField_${id}`);
             
-            if (makeSelect.value === 'Other') {otherField.classList.add('show');
+            if (makeSelect.value === 'Other') {
+                otherField.classList.add('show');
             } else {
                 otherField.classList.remove('show');
                 document.getElementById(`addMakeOther_${id}`).value = '';
@@ -797,207 +798,209 @@
             document.getElementById('formContent').style.display = 'block';
         }
 
-// Form submission
-document.getElementById('verificationForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    // Validate all sticker codes for listed assets
-    let validationFailed = false;
-    
-    currentAccountData.forEach((asset, index) => {
-        const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value;
-        if (present === 'yes') {
-            const stickerInput = document.getElementById(`sticker_${index}`);
-            const locationInput = document.getElementById(`location_${index}`);
-            const code = stickerInput.value.trim();
-            const location = locationInput.value.trim();
+        // Form submission - UPDATED WITH XMLHttpRequest
+        document.getElementById('verificationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            if (!location) {
-                alert(`Please specify the location for Asset #${index + 1} (${asset.Description})`);
-                locationInput.focus();
-                validationFailed = true;
-                return;
-            }
+            // Validate all sticker codes for listed assets
+            let validationFailed = false;
             
-            if (!code) {
-                alert(`Please enter a sticker code for Asset #${index + 1} (${asset.Description})`);
-                stickerInput.focus();
-                validationFailed = true;
-                return;
-            }
-            
-            if (!validateStickerCode(index)) {
-                alert(`Invalid sticker code format for Asset #${index + 1}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
-                stickerInput.focus();
-                validationFailed = true;
-                return;
-            }
-        }
-    });
-    
-    if (validationFailed) return;
-    
-    // Validate additional equipment fields if applicable
-    const hasAdditional = document.querySelector('input[name="hasAdditional"]:checked').value;
-    if (hasAdditional === 'yes') {
-        for (let i = 1; i <= additionalMachineCount; i++) {
-            const machineDiv = document.getElementById(`additionalMachine_${i}`);
-            if (machineDiv) {
-                const serial = document.getElementById(`addSerial_${i}`)?.value;
-                const location = document.getElementById(`addLocation_${i}`)?.value;
-                const sticker = document.getElementById(`addSticker_${i}`)?.value;
-                
-                if (!serial || !location || !sticker) {
-                    alert(`Please fill in all required fields for Additional Machine #${i} (Serial Number, Location, and Sticker Code are mandatory).`);
-                    validationFailed = true;
-                    break;
+            currentAccountData.forEach((asset, index) => {
+                const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value;
+                if (present === 'yes') {
+                    const stickerInput = document.getElementById(`sticker_${index}`);
+                    const locationInput = document.getElementById(`location_${index}`);
+                    const code = stickerInput.value.trim();
+                    const location = locationInput.value.trim();
+                    
+                    if (!location) {
+                        alert(`Please specify the location for Asset #${index + 1} (${asset.Description})`);
+                        locationInput.focus();
+                        validationFailed = true;
+                        return;
+                    }
+                    
+                    if (!code) {
+                        alert(`Please enter a sticker code for Asset #${index + 1} (${asset.Description})`);
+                        stickerInput.focus();
+                        validationFailed = true;
+                        return;
+                    }
+                    
+                    if (!validateStickerCode(index)) {
+                        alert(`Invalid sticker code format for Asset #${index + 1}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
+                        stickerInput.focus();
+                        validationFailed = true;
+                        return;
+                    }
                 }
-                
-                if (!validateAdditionalStickerCode(i)) {
-                    alert(`Invalid sticker code format for Additional Machine #${i}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
-                    document.getElementById(`addSticker_${i}`).focus();
-                    validationFailed = true;
-                    break;
+            });
+            
+            if (validationFailed) return;
+            
+            // Validate additional equipment fields if applicable
+            const hasAdditional = document.querySelector('input[name="hasAdditional"]:checked').value;
+            if (hasAdditional === 'yes') {
+                for (let i = 1; i <= additionalMachineCount; i++) {
+                    const machineDiv = document.getElementById(`additionalMachine_${i}`);
+                    if (machineDiv) {
+                        const serial = document.getElementById(`addSerial_${i}`)?.value;
+                        const location = document.getElementById(`addLocation_${i}`)?.value;
+                        const sticker = document.getElementById(`addSticker_${i}`)?.value;
+                        
+                        if (!serial || !location || !sticker) {
+                            alert(`Please fill in all required fields for Additional Machine #${i} (Serial Number, Location, and Sticker Code are mandatory).`);
+                            validationFailed = true;
+                            break;
+                        }
+                        
+                        if (!validateAdditionalStickerCode(i)) {
+                            alert(`Invalid sticker code format for Additional Machine #${i}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
+                            document.getElementById(`addSticker_${i}`).focus();
+                            validationFailed = true;
+                            break;
+                        }
+                    }
                 }
+                if (validationFailed) return;
             }
-        }
-        if (validationFailed) return;
-    }
-    
-    // Show loading, disable submit button
-    document.getElementById('loadingMessage').style.display = 'block';
-    document.getElementById('submitBtn').disabled = true;
-    
-    // Collect form data
-    const formData = {
-        accountNumber: document.getElementById('accountNumberInput').value,
-        customerName: document.getElementById('customerName').textContent,
-        customerAddress: document.getElementById('customerAddress').textContent.replace(/<br>/g, ', '),
-        assets: [],
-        additionalMachines: [],
-        notes: document.getElementById('notes').value,
-        contactName: document.getElementById('contactName').value,
-        contactEmail: document.getElementById('contactEmail').value,
-        contactPhone: document.getElementById('contactPhone').value,
-        completedBy: document.getElementById('completedBy').value,
-        completionDate: document.getElementById('completionDate').value
-    };
-    
-    // Collect asset data
-    currentAccountData.forEach((asset, index) => {
-        const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value || '';
-        const sticker = document.getElementById(`sticker_${index}`).value;
-        const location = document.getElementById(`location_${index}`).value;
-        
-        formData.assets.push({
-            description: asset.Description || '',
-            serialNumber: asset.SerialNumber || '',
-            present: present,
-            location: present === 'yes' ? location : '',
-            stickerCode: present === 'yes' ? sticker : ''
-        });
-    });
-    
-    // Collect additional machines
-    if (hasAdditional === 'yes') {
-        for (let i = 1; i <= additionalMachineCount; i++) {
-            const machineDiv = document.getElementById(`additionalMachine_${i}`);
-            if (machineDiv) {
-                const type = document.getElementById(`addType_${i}`)?.value || '';
-                const make = document.getElementById(`addMake_${i}`)?.value || '';
-                const makeOther = document.getElementById(`addMakeOther_${i}`)?.value || '';
-                const model = document.getElementById(`addModel_${i}`)?.value || '';
-                const serial = document.getElementById(`addSerial_${i}`)?.value || '';
-                const location = document.getElementById(`addLocation_${i}`)?.value || '';
-                const sticker = document.getElementById(`addSticker_${i}`)?.value || '';
+            
+            // Show loading, disable submit button
+            document.getElementById('loadingMessage').style.display = 'block';
+            document.getElementById('submitBtn').disabled = true;
+            
+            // Collect form data
+            const formData = {
+                accountNumber: document.getElementById('accountNumberInput').value,
+                customerName: document.getElementById('customerName').textContent,
+                customerAddress: document.getElementById('customerAddress').textContent.replace(/<br>/g, ', '),
+                assets: [],
+                additionalMachines: [],
+                notes: document.getElementById('notes').value,
+                contactName: document.getElementById('contactName').value,
+                contactEmail: document.getElementById('contactEmail').value,
+                contactPhone: document.getElementById('contactPhone').value,
+                completedBy: document.getElementById('completedBy').value,
+                completionDate: document.getElementById('completionDate').value
+            };
+            
+            // Collect asset data
+            currentAccountData.forEach((asset, index) => {
+                const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value || '';
+                const sticker = document.getElementById(`sticker_${index}`).value;
+                const location = document.getElementById(`location_${index}`).value;
                 
-                formData.additionalMachines.push({
-                    type: type,
-                    make: make === 'Other' ? makeOther : make,
-                    model: model,
-                    serialNumber: serial,
-                    location: location,
-                    stickerCode: sticker
+                formData.assets.push({
+                    description: asset.Description || '',
+                    serialNumber: asset.SerialNumber || '',
+                    present: present,
+                    location: present === 'yes' ? location : '',
+                    stickerCode: present === 'yes' ? sticker : ''
                 });
+            });
+            
+            // Collect additional machines
+            if (hasAdditional === 'yes') {
+                for (let i = 1; i <= additionalMachineCount; i++) {
+                    const machineDiv = document.getElementById(`additionalMachine_${i}`);
+                    if (machineDiv) {
+                        const type = document.getElementById(`addType_${i}`)?.value || '';
+                        const make = document.getElementById(`addMake_${i}`)?.value || '';
+                        const makeOther = document.getElementById(`addMakeOther_${i}`)?.value || '';
+                        const model = document.getElementById(`addModel_${i}`)?.value || '';
+                        const serial = document.getElementById(`addSerial_${i}`)?.value || '';
+                        const location = document.getElementById(`addLocation_${i}`)?.value || '';
+                        const sticker = document.getElementById(`addSticker_${i}`)?.value || '';
+                        
+                        formData.additionalMachines.push({
+                            type: type,
+                            make: make === 'Other' ? makeOther : make,
+                            model: model,
+                            serialNumber: serial,
+                            location: location,
+                            stickerCode: sticker
+                        });
+                    }
+                }
             }
-        }
-    }
-    
-    // Send data to Google Apps Script using XMLHttpRequest as fallback
-    console.log('Attempting to submit to:', SCRIPT_URL);
-    console.log('Form data:', formData);
-    
-    try {
-        // Try using XMLHttpRequest instead of fetch
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', SCRIPT_URL, true);
-        xhr.setRequestHeader('Content-Type', 'text/plain');
-        
-        xhr.onload = function() {
-            console.log('Response status:', xhr.status);
-            console.log('Response text:', xhr.responseText);
             
-            // Hide loading
-            document.getElementById('loadingMessage').style.display = 'none';
-            document.getElementById('submitBtn').disabled = false;
+            // Send data using XMLHttpRequest (more compatible with Google Apps Script)
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', SCRIPT_URL, true);
+            xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
             
-            if (xhr.status === 200 || xhr.status === 302) {
-                try {
-                    const result = JSON.parse(xhr.responseText);
-                    if (result.success) {
-                        // Show success message
+            xhr.onload = function() {
+                console.log('Response received');
+                console.log('Status:', xhr.status);
+                console.log('Response:', xhr.responseText);
+                
+                // Hide loading
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+                
+                // Google Apps Script returns 302 redirect, but data is still saved
+                if (xhr.status === 200 || xhr.status === 302 || xhr.status === 0) {
+                    // Try to parse response
+                    try {
+                        const result = JSON.parse(xhr.responseText);
+                        if (result.success) {
+                            // Show success message
+                            document.getElementById('formContent').style.display = 'none';
+                            document.getElementById('successMessage').style.display = 'block';
+                            document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+                        } else {
+                            throw new Error(result.message || 'Submission failed');
+                        }
+                    } catch (e) {
+                        // If we can't parse JSON, but got a good status, assume success
+                        console.log('Response parsing failed, assuming success based on status code');
                         document.getElementById('formContent').style.display = 'none';
                         document.getElementById('successMessage').style.display = 'block';
                         document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
-                    } else {
-                        throw new Error(result.message || 'Submission failed');
                     }
-                } catch (parseError) {
-                    // If we can't parse JSON but got 200, assume success
-                    console.log('Could not parse response, but got status 200, assuming success');
+                } else {
+                    // Show error
                     document.getElementById('formContent').style.display = 'none';
-                    document.getElementById('successMessage').style.display = 'block';
-                    document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+                    document.getElementById('errorMessage').style.display = 'block';
+                    document.getElementById('errorText').textContent = 'Server error (Status: ' + xhr.status + '). Please try again or contact support.';
+                    document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
                 }
-            } else {
-                throw new Error('Server returned status ' + xhr.status);
-            }
-        };
-        
-        xhr.onerror = function() {
-            console.error('XHR error occurred');
+            };
             
-            // Hide loading
-            document.getElementById('loadingMessage').style.display = 'none';
-            document.getElementById('submitBtn').disabled = false;
+            xhr.onerror = function() {
+                console.error('Network error occurred');
+                
+                // Hide loading
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+                
+                // Show error message
+                document.getElementById('formContent').style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('errorText').textContent = 'Network error. Please check your internet connection and try again.';
+                document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
+            };
             
-            // Show error message
-            document.getElementById('formContent').style.display = 'none';
-            document.getElementById('errorMessage').style.display = 'block';
-            document.getElementById('errorText').textContent = 'Connection error. Please check your internet connection and try again.';
-            document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
-        };
-        
-        xhr.send(JSON.stringify(formData));
-        
-    } catch (error) {
-        console.error('Submission error:', error);
-        
-        // Hide loading
-        document.getElementById('loadingMessage').style.display = 'none';
-        document.getElementById('submitBtn').disabled = false;
-        
-        // Show error message
-        document.getElementById('formContent').style.display = 'none';
-        document.getElementById('errorMessage').style.display = 'block';
-        document.getElementById('errorText').textContent = 'Error: ' + error.message;
-        document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
-    }
-});
+            xhr.ontimeout = function() {
+                console.error('Request timed out');
+                
+                // Hide loading
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+                
+                // Show error message
+                document.getElementById('formContent').style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('errorText').textContent = 'Request timed out. Please try again.';
+                document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
+            };
+            
+            // Set timeout to 30 seconds
+            xhr.timeout = 30000;
+            
+            // Send the request
+            xhr.send(JSON.stringify(formData));
+        });
     </script>
 </body>
 </html>
-
-
-
-
