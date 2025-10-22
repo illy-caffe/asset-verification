@@ -410,6 +410,30 @@
             margin-top: 5px;
             font-style: italic;
         }
+
+        .debug-console {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .debug-console.show {
+            display: block;
+        }
+
+        .debug-toggle {
+            background-color: #666;
+            font-size: 12px;
+            padding: 8px 16px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -561,6 +585,10 @@
                 <div class="loading" id="loadingMessage">Submitting form</div>
                 
                 <button type="submit" class="submit-btn" id="submitBtn">SUBMIT</button>
+                
+                <!-- Debug Console Toggle -->
+                <button type="button" class="debug-toggle" onclick="toggleDebug()">Show Debug Info</button>
+                <div id="debugConsole" class="debug-console"></div>
             </form>
         </div>
         
@@ -590,10 +618,34 @@
         
         let currentAccountData = [];
         let additionalMachineCount = 0;
+        let debugMode = false;
+
+        // Debug logging function
+        function debugLog(message) {
+            console.log(message);
+            if (debugMode) {
+                const debugConsole = document.getElementById('debugConsole');
+                const timestamp = new Date().toLocaleTimeString();
+                debugConsole.innerHTML += `[${timestamp}] ${message}<br>`;
+                debugConsole.scrollTop = debugConsole.scrollHeight;
+            }
+        }
+
+        function toggleDebug() {
+            debugMode = !debugMode;
+            const debugConsole = document.getElementById('debugConsole');
+            if (debugMode) {
+                debugConsole.classList.add('show');
+                debugLog('Debug mode enabled');
+            } else {
+                debugConsole.classList.remove('show');
+            }
+        }
 
         // Set today's date on page load
         window.onload = function() {
             document.getElementById('completionDate').valueAsDate = new Date();
+            debugLog('Page loaded, date set');
         };
 
         // Load account data from Google Apps Script
@@ -601,6 +653,8 @@
             const accountNumber = document.getElementById('accountNumberInput').value.trim();
             const errorDiv = document.getElementById('accountError');
             const loadingDiv = document.getElementById('loadingAccount');
+            
+            debugLog('Loading account: ' + accountNumber);
             
             if (accountNumber === '') {
                 errorDiv.textContent = 'Please enter an account number.';
@@ -617,6 +671,8 @@
                 // Call Google Apps Script
                 const response = await fetch(`${SCRIPT_URL}?accountNumber=${encodeURIComponent(accountNumber)}`);
                 const result = await response.json();
+                
+                debugLog('Account data received: ' + JSON.stringify(result));
                 
                 // Hide loading
                 loadingDiv.style.display = 'none';
@@ -656,6 +712,7 @@
                 loadingDiv.style.display = 'none';
                 errorDiv.textContent = 'Error loading account data: ' + error.message;
                 errorDiv.style.display = 'block';
+                debugLog('Error loading account: ' + error.message);
                 console.error('Error:', error);
             }
         }
@@ -663,6 +720,8 @@
         function generateAssetCards() {
             const container = document.getElementById('assetsContainer');
             container.innerHTML = '';
+            
+            debugLog('Generating ' + currentAccountData.length + ' asset cards');
             
             currentAccountData.forEach((asset, index) => {
                 const assetCard = document.createElement('div');
@@ -689,7 +748,7 @@
                     <div id="stickerField_${index}" class="sticker-field">    
                     <div class="form-group">
                         <label class="required">Where is this equipment located within your establishment?<br><span style="font-size: 12px; font-weight: normal; color: #666;">(Please be as specific and precise as possible)</span></label>
-                        <input type="text" id="location_${index}" placeholder="e.g., Banquets, Kitchen, Floor 2 Restaurant, Pantry, Café, Ballroom, Back of House, Bar, Basement, In-Room Dining, Storage" required>
+                        <input type="text" id="location_${index}" placeholder="e.g., Banquets, Kitchen, Floor 2 Restaurant, Pantry, Café, Ballroom, Back of House, Bar, Basement, In-Room Dining, Storage">
                     </div>
                         <div class="form-group">
                             <label class="required">Please apply a sticker to this machine and enter the sticker code below:</label>
@@ -777,6 +836,8 @@
         function addAdditionalMachine() {
             additionalMachineCount++;
             const container = document.getElementById('additionalMachinesContainer');
+            
+            debugLog('Adding additional machine #' + additionalMachineCount);
             
             const machineDiv = document.createElement('div');
             machineDiv.className = 'additional-machine';
@@ -875,6 +936,7 @@
         function removeAdditionalMachine(id) {
             const machine = document.getElementById(`additionalMachine_${id}`);
             machine.remove();
+            debugLog('Removed additional machine #' + id);
         }
 
         function toggleOtherMake(id) {
@@ -894,72 +956,106 @@
             document.getElementById('formContent').style.display = 'block';
         }
 
-        // Form submission - Using XMLHttpRequest
+        // IMPROVED Form submission with better error handling
         document.getElementById('verificationForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Validate all sticker codes for listed assets
-            let validationFailed = false;
+            debugLog('=== FORM SUBMISSION STARTED ===');
             
-            currentAccountData.forEach((asset, index) => {
+            // Check if user answered Yes/No for each asset
+            let unansweredAssets = [];
+            for (let index = 0; index < currentAccountData.length; index++) {
+                const present = document.querySelector(`input[name="asset_${index}_present"]:checked`);
+                if (!present) {
+                    unansweredAssets.push(index + 1);
+                }
+            }
+            
+            if (unansweredAssets.length > 0) {
+                alert(`Please answer Yes or No for Asset #${unansweredAssets.join(', #')}`);
+                debugLog('Validation failed: Unanswered assets');
+                return;
+            }
+            
+            // Validate all sticker codes for listed assets that are present
+            for (let index = 0; index < currentAccountData.length; index++) {
+                const asset = currentAccountData[index];
                 const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value;
+                
                 if (present === 'yes') {
                     const stickerInput = document.getElementById(`sticker_${index}`);
                     const locationInput = document.getElementById(`location_${index}`);
-                    const code = stickerInput.value.trim();
-                    const location = locationInput.value.trim();
+                    const code = stickerInput ? stickerInput.value.trim() : '';
+                    const location = locationInput ? locationInput.value.trim() : '';
                     
                     if (!location) {
                         alert(`Please specify the location for Asset #${index + 1} (${asset.Description})`);
                         locationInput.focus();
-                        validationFailed = true;
+                        debugLog(`Validation failed: Missing location for asset ${index + 1}`);
                         return;
                     }
                     
                     if (!code) {
                         alert(`Please enter a sticker code for Asset #${index + 1} (${asset.Description})`);
                         stickerInput.focus();
-                        validationFailed = true;
+                        debugLog(`Validation failed: Missing sticker code for asset ${index + 1}`);
                         return;
                     }
                     
                     if (!validateStickerCode(index)) {
                         alert(`Invalid sticker code format for Asset #${index + 1}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
                         stickerInput.focus();
-                        validationFailed = true;
+                        debugLog(`Validation failed: Invalid sticker code for asset ${index + 1}`);
                         return;
                     }
                 }
-            });
+            }
             
-            if (validationFailed) return;
+            debugLog('Asset validation passed');
             
-            // Validate additional equipment fields if applicable
-            const hasAdditional = document.querySelector('input[name="hasAdditional"]:checked').value;
+            // Validate additional equipment if applicable
+            const hasAdditional = document.querySelector('input[name="hasAdditional"]:checked')?.value;
             if (hasAdditional === 'yes') {
                 for (let i = 1; i <= additionalMachineCount; i++) {
                     const machineDiv = document.getElementById(`additionalMachine_${i}`);
                     if (machineDiv) {
+                        const type = document.getElementById(`addType_${i}`)?.value;
+                        const make = document.getElementById(`addMake_${i}`)?.value;
                         const serial = document.getElementById(`addSerial_${i}`)?.value;
                         const location = document.getElementById(`addLocation_${i}`)?.value;
                         const sticker = document.getElementById(`addSticker_${i}`)?.value;
                         
-                        if (!serial || !location || !sticker) {
-                            alert(`Please fill in all required fields for Additional Machine #${i} (Serial Number, Location, and Sticker Code are mandatory).`);
-                            validationFailed = true;
-                            break;
+                        if (!type || !make || !serial || !location || !sticker) {
+                            alert(`Please fill in all required fields for Additional Machine #${i}`);
+                            debugLog(`Validation failed: Missing fields in additional machine ${i}`);
+                            return;
                         }
                         
                         if (!validateAdditionalStickerCode(i)) {
                             alert(`Invalid sticker code format for Additional Machine #${i}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
                             document.getElementById(`addSticker_${i}`).focus();
-                            validationFailed = true;
-                            break;
+                            debugLog(`Validation failed: Invalid sticker code for additional machine ${i}`);
+                            return;
                         }
                     }
                 }
-                if (validationFailed) return;
             }
+            
+            debugLog('All validation passed');
+            
+            // Check contact information
+            const contactName = document.getElementById('contactName').value.trim();
+            const contactEmail = document.getElementById('contactEmail').value.trim();
+            const completedBy = document.getElementById('completedBy').value.trim();
+            const completionDate = document.getElementById('completionDate').value;
+            
+            if (!contactName || !contactEmail || !completedBy || !completionDate) {
+                alert('Please fill in all required contact and completion fields.');
+                debugLog('Validation failed: Missing contact info');
+                return;
+            }
+            
+            debugLog('Contact info validated');
             
             // Show loading, disable submit button
             document.getElementById('loadingMessage').style.display = 'block';
@@ -973,27 +1069,29 @@
                 assets: [],
                 additionalMachines: [],
                 notes: document.getElementById('notes').value,
-                contactName: document.getElementById('contactName').value,
-                contactEmail: document.getElementById('contactEmail').value,
+                contactName: contactName,
+                contactEmail: contactEmail,
                 contactPhone: document.getElementById('contactPhone').value,
-                completedBy: document.getElementById('completedBy').value,
-                completionDate: document.getElementById('completionDate').value
+                completedBy: completedBy,
+                completionDate: completionDate
             };
             
             // Collect asset data
             currentAccountData.forEach((asset, index) => {
                 const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value || '';
-                const sticker = document.getElementById(`sticker_${index}`).value;
-                const location = document.getElementById(`location_${index}`).value;
+                const sticker = present === 'yes' ? (document.getElementById(`sticker_${index}`)?.value || '') : '';
+                const location = present === 'yes' ? (document.getElementById(`location_${index}`)?.value || '') : '';
                 
                 formData.assets.push({
                     description: asset.Description || '',
                     serialNumber: asset.SerialNumber || '',
                     present: present,
-                    location: present === 'yes' ? location : '',
-                    stickerCode: present === 'yes' ? sticker : ''
+                    location: location,
+                    stickerCode: sticker
                 });
             });
+            
+            debugLog('Assets collected: ' + formData.assets.length);
             
             // Collect additional machines
             if (hasAdditional === 'yes') {
@@ -1020,42 +1118,53 @@
                 }
             }
             
-            // Send data using XMLHttpRequest (more compatible with Google Apps Script)
+            debugLog('Additional machines collected: ' + formData.additionalMachines.length);
+            debugLog('Sending data to server...');
+            
+            // Send data using XMLHttpRequest
             const xhr = new XMLHttpRequest();
             xhr.open('POST', SCRIPT_URL, true);
             xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
             
+            xhr.onreadystatechange = function() {
+                debugLog('XHR State: ' + xhr.readyState + ', Status: ' + xhr.status);
+            };
+            
             xhr.onload = function() {
-                console.log('Response received');
-                console.log('Status:', xhr.status);
-                console.log('Response:', xhr.responseText);
+                debugLog('=== XHR ONLOAD FIRED ===');
+                debugLog('Status: ' + xhr.status);
+                debugLog('Response Text: ' + xhr.responseText);
                 
                 // Hide loading
                 document.getElementById('loadingMessage').style.display = 'none';
                 document.getElementById('submitBtn').disabled = false;
                 
-                // Google Apps Script returns 302 redirect, but data is still saved
+                // Google Apps Script can return various status codes
+                // 200 = success, 302 = redirect (but data saved), 0 = CORS (but might be saved)
                 if (xhr.status === 200 || xhr.status === 302 || xhr.status === 0) {
-                    // Try to parse response
                     try {
                         const result = JSON.parse(xhr.responseText);
-                        if (result.success) {
-                            // Show success message
+                        debugLog('Parsed response: ' + JSON.stringify(result));
+                        
+                        if (result.success !== false) {
+                            // Show success
                             document.getElementById('formContent').style.display = 'none';
                             document.getElementById('successMessage').style.display = 'block';
                             document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+                            debugLog('SUCCESS: Form submitted');
                         } else {
                             throw new Error(result.message || 'Submission failed');
                         }
                     } catch (e) {
-                        // If we can't parse JSON, but got a good status, assume success
-                        console.log('Response parsing failed, assuming success based on status code');
+                        // If we can't parse JSON but got good status, assume success
+                        debugLog('JSON parse failed, assuming success based on status: ' + e.message);
                         document.getElementById('formContent').style.display = 'none';
                         document.getElementById('successMessage').style.display = 'block';
                         document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
                     }
                 } else {
                     // Show error
+                    debugLog('ERROR: Bad status code');
                     document.getElementById('formContent').style.display = 'none';
                     document.getElementById('errorMessage').style.display = 'block';
                     document.getElementById('errorText').textContent = 'Server error (Status: ' + xhr.status + '). Please try again or contact support.';
@@ -1064,7 +1173,8 @@
             };
             
             xhr.onerror = function() {
-                console.error('Network error occurred');
+                debugLog('=== XHR ERROR ===');
+                debugLog('Network error occurred');
                 
                 // Hide loading
                 document.getElementById('loadingMessage').style.display = 'none';
@@ -1078,7 +1188,7 @@
             };
             
             xhr.ontimeout = function() {
-                console.error('Request timed out');
+                debugLog('=== XHR TIMEOUT ===');
                 
                 // Hide loading
                 document.getElementById('loadingMessage').style.display = 'none';
@@ -1095,10 +1205,10 @@
             xhr.timeout = 30000;
             
             // Send the request
-            xhr.send(JSON.stringify(formData));
+            const jsonData = JSON.stringify(formData);
+            debugLog('Sending JSON data (' + jsonData.length + ' bytes)');
+            xhr.send(jsonData);
         });
     </script>
 </body>
 </html>
-
-
