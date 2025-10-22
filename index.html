@@ -410,30 +410,6 @@
             margin-top: 5px;
             font-style: italic;
         }
-
-        .debug-console {
-            background-color: #f5f5f5;
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 12px;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-        }
-
-        .debug-console.show {
-            display: block;
-        }
-
-        .debug-toggle {
-            background-color: #666;
-            font-size: 12px;
-            padding: 8px 16px;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
@@ -501,7 +477,7 @@
                     </ol>
                     
                     <p style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 13px; color: #666;">
-                        <strong>Troubleshooting:</strong> If the Submit button doesn't respond, try opening this form in an Incognito/Private browsing window (browser extensions can sometimes interfere with form submission).
+                        <strong>Troubleshooting:</strong> If you experience any issues with form submission, please contact your Sales Representative or email <a href="mailto:CYA@illy.com">CYA@illy.com</a>.
                     </p>
                 </div>
                 
@@ -585,10 +561,6 @@
                 <div class="loading" id="loadingMessage">Submitting form</div>
                 
                 <button type="submit" class="submit-btn" id="submitBtn">SUBMIT</button>
-                
-                <!-- Debug Console Toggle -->
-                <button type="button" class="debug-toggle" onclick="toggleDebug()">Show Debug Info</button>
-                <div id="debugConsole" class="debug-console"></div>
             </form>
         </div>
         
@@ -608,6 +580,7 @@
         <div class="error-message" id="errorMessage">
             <h2>Submission Error</h2>
             <p id="errorText">There was an error submitting the form. Please try again.</p>
+            <p style="margin-top: 15px; font-size: 14px;">If the problem persists, please contact <a href="mailto:CYA@illy.com">CYA@illy.com</a></p>
             <button onclick="hideError()" style="margin-top: 20px; background-color: #f44336;">Try Again</button>
         </div>
     </div>
@@ -618,34 +591,10 @@
         
         let currentAccountData = [];
         let additionalMachineCount = 0;
-        let debugMode = false;
-
-        // Debug logging function
-        function debugLog(message) {
-            console.log(message);
-            if (debugMode) {
-                const debugConsole = document.getElementById('debugConsole');
-                const timestamp = new Date().toLocaleTimeString();
-                debugConsole.innerHTML += `[${timestamp}] ${message}<br>`;
-                debugConsole.scrollTop = debugConsole.scrollHeight;
-            }
-        }
-
-        function toggleDebug() {
-            debugMode = !debugMode;
-            const debugConsole = document.getElementById('debugConsole');
-            if (debugMode) {
-                debugConsole.classList.add('show');
-                debugLog('Debug mode enabled');
-            } else {
-                debugConsole.classList.remove('show');
-            }
-        }
 
         // Set today's date on page load
         window.onload = function() {
             document.getElementById('completionDate').valueAsDate = new Date();
-            debugLog('Page loaded, date set');
         };
 
         // Load account data from Google Apps Script
@@ -653,8 +602,6 @@
             const accountNumber = document.getElementById('accountNumberInput').value.trim();
             const errorDiv = document.getElementById('accountError');
             const loadingDiv = document.getElementById('loadingAccount');
-            
-            debugLog('Loading account: ' + accountNumber);
             
             if (accountNumber === '') {
                 errorDiv.textContent = 'Please enter an account number.';
@@ -671,8 +618,6 @@
                 // Call Google Apps Script
                 const response = await fetch(`${SCRIPT_URL}?accountNumber=${encodeURIComponent(accountNumber)}`);
                 const result = await response.json();
-                
-                debugLog('Account data received: ' + JSON.stringify(result));
                 
                 // Hide loading
                 loadingDiv.style.display = 'none';
@@ -712,7 +657,6 @@
                 loadingDiv.style.display = 'none';
                 errorDiv.textContent = 'Error loading account data: ' + error.message;
                 errorDiv.style.display = 'block';
-                debugLog('Error loading account: ' + error.message);
                 console.error('Error:', error);
             }
         }
@@ -720,8 +664,6 @@
         function generateAssetCards() {
             const container = document.getElementById('assetsContainer');
             container.innerHTML = '';
-            
-            debugLog('Generating ' + currentAccountData.length + ' asset cards');
             
             currentAccountData.forEach((asset, index) => {
                 const assetCard = document.createElement('div');
@@ -735,13 +677,13 @@
                         <strong>Serial Number:</strong> ${asset.SerialNumber || 'N/A'}
                     </div>
                     <div class="form-group">
-                        <label>Is this Serial Number currently at your location?</label>
+                        <label class="required">Is this Serial Number currently at your location?</label>
                         <div class="radio-group">
                             <label>
-                                <input type="radio" name="asset_${index}_present" value="yes" onchange="toggleStickerField(${index}, true)"> Yes
+                                <input type="radio" name="asset_${index}_present" value="yes" onchange="toggleStickerField(${index}, true)" required> Yes
                             </label>
                             <label>
-                                <input type="radio" name="asset_${index}_present" value="no" onchange="toggleStickerField(${index}, false)"> No
+                                <input type="radio" name="asset_${index}_present" value="no" onchange="toggleStickerField(${index}, false)" required> No
                             </label>
                         </div>
                     </div>
@@ -836,8 +778,6 @@
         function addAdditionalMachine() {
             additionalMachineCount++;
             const container = document.getElementById('additionalMachinesContainer');
-            
-            debugLog('Adding additional machine #' + additionalMachineCount);
             
             const machineDiv = document.createElement('div');
             machineDiv.className = 'additional-machine';
@@ -936,7 +876,6 @@
         function removeAdditionalMachine(id) {
             const machine = document.getElementById(`additionalMachine_${id}`);
             machine.remove();
-            debugLog('Removed additional machine #' + id);
         }
 
         function toggleOtherMake(id) {
@@ -956,13 +895,11 @@
             document.getElementById('formContent').style.display = 'block';
         }
 
-        // IMPROVED Form submission with better error handling
+        // PRODUCTION Form submission - Clean version with no debug output
         document.getElementById('verificationForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            debugLog('=== FORM SUBMISSION STARTED ===');
-            
-            // Check if user answered Yes/No for each asset
+            // Step 1: Check if all assets have Yes/No selected
             let unansweredAssets = [];
             for (let index = 0; index < currentAccountData.length; index++) {
                 const present = document.querySelector(`input[name="asset_${index}_present"]:checked`);
@@ -972,15 +909,14 @@
             }
             
             if (unansweredAssets.length > 0) {
-                alert(`Please answer Yes or No for Asset #${unansweredAssets.join(', #')}`);
-                debugLog('Validation failed: Unanswered assets');
+                alert(`Please select Yes or No for the following asset(s):\n\nAsset #${unansweredAssets.join(', Asset #')}\n\nYou must indicate whether each piece of equipment is currently at your location.`);
                 return;
             }
             
-            // Validate all sticker codes for listed assets that are present
+            // Step 2: Validate assets marked as "Yes"
             for (let index = 0; index < currentAccountData.length; index++) {
                 const asset = currentAccountData[index];
-                const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value;
+                const present = document.querySelector(`input[name="asset_${index}_present"]:checked`).value;
                 
                 if (present === 'yes') {
                     const stickerInput = document.getElementById(`sticker_${index}`);
@@ -989,32 +925,27 @@
                     const location = locationInput ? locationInput.value.trim() : '';
                     
                     if (!location) {
-                        alert(`Please specify the location for Asset #${index + 1} (${asset.Description})`);
+                        alert(`Please specify the location for:\n\nAsset #${index + 1}: ${asset.Description}\n\nWe need to know where this equipment is located within your establishment.`);
                         locationInput.focus();
-                        debugLog(`Validation failed: Missing location for asset ${index + 1}`);
                         return;
                     }
                     
                     if (!code) {
-                        alert(`Please enter a sticker code for Asset #${index + 1} (${asset.Description})`);
+                        alert(`Please enter the sticker code for:\n\nAsset #${index + 1}: ${asset.Description}\n\nAfter applying the sticker to this equipment, enter its unique code here.`);
                         stickerInput.focus();
-                        debugLog(`Validation failed: Missing sticker code for asset ${index + 1}`);
                         return;
                     }
                     
                     if (!validateStickerCode(index)) {
-                        alert(`Invalid sticker code format for Asset #${index + 1}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
+                        alert(`Invalid sticker code format for:\n\nAsset #${index + 1}: ${asset.Description}\n\nThe code must follow this format: CYA + 6 digits + ILLY\nExample: CYA123456ILLY\n\nPlease check the sticker and re-enter the code.`);
                         stickerInput.focus();
-                        debugLog(`Validation failed: Invalid sticker code for asset ${index + 1}`);
                         return;
                     }
                 }
             }
             
-            debugLog('Asset validation passed');
-            
-            // Validate additional equipment if applicable
-            const hasAdditional = document.querySelector('input[name="hasAdditional"]:checked')?.value;
+            // Step 3: Validate additional equipment if applicable
+            const hasAdditional = document.querySelector('input[name="hasAdditional"]:checked').value;
             if (hasAdditional === 'yes') {
                 for (let i = 1; i <= additionalMachineCount; i++) {
                     const machineDiv = document.getElementById(`additionalMachine_${i}`);
@@ -1026,38 +957,31 @@
                         const sticker = document.getElementById(`addSticker_${i}`)?.value;
                         
                         if (!type || !make || !serial || !location || !sticker) {
-                            alert(`Please fill in all required fields for Additional Machine #${i}`);
-                            debugLog(`Validation failed: Missing fields in additional machine ${i}`);
+                            alert(`Please complete all required fields for Additional Machine #${i}.\n\nRequired fields:\n• Machine Type\n• Make\n• Serial Number\n• Location\n• Sticker Code`);
                             return;
                         }
                         
                         if (!validateAdditionalStickerCode(i)) {
-                            alert(`Invalid sticker code format for Additional Machine #${i}.\n\nThe code must be: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
+                            alert(`Invalid sticker code format for Additional Machine #${i}.\n\nThe code must follow this format: CYA + 6 digits + ILLY\nExample: CYA123456ILLY`);
                             document.getElementById(`addSticker_${i}`).focus();
-                            debugLog(`Validation failed: Invalid sticker code for additional machine ${i}`);
                             return;
                         }
                     }
                 }
             }
             
-            debugLog('All validation passed');
-            
-            // Check contact information
+            // Step 4: Validate contact information
             const contactName = document.getElementById('contactName').value.trim();
             const contactEmail = document.getElementById('contactEmail').value.trim();
             const completedBy = document.getElementById('completedBy').value.trim();
             const completionDate = document.getElementById('completionDate').value;
             
             if (!contactName || !contactEmail || !completedBy || !completionDate) {
-                alert('Please fill in all required contact and completion fields.');
-                debugLog('Validation failed: Missing contact info');
+                alert('Please fill in all required contact and completion fields:\n\n• Contact Name\n• Email Address\n• Full Name (person completing form)\n• Date');
                 return;
             }
             
-            debugLog('Contact info validated');
-            
-            // Show loading, disable submit button
+            // All validation passed - proceed with submission
             document.getElementById('loadingMessage').style.display = 'block';
             document.getElementById('submitBtn').disabled = true;
             
@@ -1078,7 +1002,7 @@
             
             // Collect asset data
             currentAccountData.forEach((asset, index) => {
-                const present = document.querySelector(`input[name="asset_${index}_present"]:checked`)?.value || '';
+                const present = document.querySelector(`input[name="asset_${index}_present"]:checked`).value;
                 const sticker = present === 'yes' ? (document.getElementById(`sticker_${index}`)?.value || '') : '';
                 const location = present === 'yes' ? (document.getElementById(`location_${index}`)?.value || '') : '';
                 
@@ -1090,8 +1014,6 @@
                     stickerCode: sticker
                 });
             });
-            
-            debugLog('Assets collected: ' + formData.assets.length);
             
             // Collect additional machines
             if (hasAdditional === 'yes') {
@@ -1118,97 +1040,62 @@
                 }
             }
             
-            debugLog('Additional machines collected: ' + formData.additionalMachines.length);
-            debugLog('Sending data to server...');
-            
             // Send data using XMLHttpRequest
             const xhr = new XMLHttpRequest();
             xhr.open('POST', SCRIPT_URL, true);
             xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
-            
-            xhr.onreadystatechange = function() {
-                debugLog('XHR State: ' + xhr.readyState + ', Status: ' + xhr.status);
-            };
+            xhr.timeout = 30000;
             
             xhr.onload = function() {
-                debugLog('=== XHR ONLOAD FIRED ===');
-                debugLog('Status: ' + xhr.status);
-                debugLog('Response Text: ' + xhr.responseText);
-                
-                // Hide loading
                 document.getElementById('loadingMessage').style.display = 'none';
                 document.getElementById('submitBtn').disabled = false;
                 
-                // Google Apps Script can return various status codes
-                // 200 = success, 302 = redirect (but data saved), 0 = CORS (but might be saved)
+                // Accept success on these status codes
                 if (xhr.status === 200 || xhr.status === 302 || xhr.status === 0) {
                     try {
                         const result = JSON.parse(xhr.responseText);
-                        debugLog('Parsed response: ' + JSON.stringify(result));
-                        
                         if (result.success !== false) {
-                            // Show success
-                            document.getElementById('formContent').style.display = 'none';
-                            document.getElementById('successMessage').style.display = 'block';
-                            document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
-                            debugLog('SUCCESS: Form submitted');
+                            showSuccess();
                         } else {
-                            throw new Error(result.message || 'Submission failed');
+                            showError('The server reported an error: ' + (result.message || 'Unknown error'));
                         }
                     } catch (e) {
-                        // If we can't parse JSON but got good status, assume success
-                        debugLog('JSON parse failed, assuming success based on status: ' + e.message);
-                        document.getElementById('formContent').style.display = 'none';
-                        document.getElementById('successMessage').style.display = 'block';
-                        document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+                        // If can't parse JSON but got good status, assume success
+                        showSuccess();
                     }
                 } else {
-                    // Show error
-                    debugLog('ERROR: Bad status code');
-                    document.getElementById('formContent').style.display = 'none';
-                    document.getElementById('errorMessage').style.display = 'block';
-                    document.getElementById('errorText').textContent = 'Server error (Status: ' + xhr.status + '). Please try again or contact support.';
-                    document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
+                    showError('Server error (Status: ' + xhr.status + '). Please try again or contact support.');
                 }
             };
             
             xhr.onerror = function() {
-                debugLog('=== XHR ERROR ===');
-                debugLog('Network error occurred');
-                
-                // Hide loading
                 document.getElementById('loadingMessage').style.display = 'none';
                 document.getElementById('submitBtn').disabled = false;
-                
-                // Show error message
-                document.getElementById('formContent').style.display = 'none';
-                document.getElementById('errorMessage').style.display = 'block';
-                document.getElementById('errorText').textContent = 'Network error. Please check your internet connection and try again.';
-                document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
+                showError('Network error. Please check your internet connection and try again.');
             };
             
             xhr.ontimeout = function() {
-                debugLog('=== XHR TIMEOUT ===');
-                
-                // Hide loading
                 document.getElementById('loadingMessage').style.display = 'none';
                 document.getElementById('submitBtn').disabled = false;
-                
-                // Show error message
-                document.getElementById('formContent').style.display = 'none';
-                document.getElementById('errorMessage').style.display = 'block';
-                document.getElementById('errorText').textContent = 'Request timed out. Please try again.';
-                document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
+                showError('Request timed out. Please try again.');
             };
             
-            // Set timeout to 30 seconds
-            xhr.timeout = 30000;
-            
             // Send the request
-            const jsonData = JSON.stringify(formData);
-            debugLog('Sending JSON data (' + jsonData.length + ' bytes)');
-            xhr.send(jsonData);
+            xhr.send(JSON.stringify(formData));
         });
+        
+        function showSuccess() {
+            document.getElementById('formContent').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function showError(message) {
+            document.getElementById('formContent').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').scrollIntoView({ behavior: 'smooth' });
+        }
     </script>
 </body>
 </html>
