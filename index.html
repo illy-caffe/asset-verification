@@ -649,7 +649,6 @@
                                 </div>
                             </li>
                             <li style="margin-bottom: 8px;"><strong>Use a recommended browser:</strong> Chrome, Firefox, Safari, or Edge (latest versions work best)</li>
-                            <li style="margin-bottom: 8px;"><strong>Check your internet connection:</strong> Ensure you have a stable connection to submit the form</li>
                         </ol>
                         <div style="padding: 12px; background-color: rgba(200,16,46,0.08); border-radius: 4px; border: 1px solid rgba(200,16,46,0.2);">
                             <p style="font-size: 13px; color: #333; margin: 0;">
@@ -769,15 +768,20 @@
     </div>
 
     <script>
-        // Google Apps Script URL
+        // Google Apps Script URL - UPDATED
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbynOXCmENadc-WFLy82p8b_QV3bYiDg55JjXwx65Kxs05Zf6OyrI1z01DTb8C6Q1W1N/exec';
         
         let currentAccountData = [];
         let additionalMachineCount = 0;
 
-        // Set today's date on page load
+        // Set today's date on page load - FIXED TO USE LOCAL TIMEZONE
         window.onload = function() {
-            document.getElementById('completionDate').valueAsDate = new Date();
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateString = `${year}-${month}-${day}`;
+            document.getElementById('completionDate').value = dateString;
         };
 
         // Load account data from Google Apps Script
@@ -1254,7 +1258,7 @@
             xhr.onerror = function() {
                 document.getElementById('loadingMessage').style.display = 'none';
                 document.getElementById('submitBtn').disabled = false;
-                showError('Network error. Please check your internet connection and try again.');
+                showError('Network error. Please try again.');
             };
             
             xhr.ontimeout = function() {
@@ -1282,4 +1286,3 @@
     </script>
 </body>
 </html>
-
