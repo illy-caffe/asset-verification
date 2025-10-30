@@ -1131,8 +1131,53 @@
                 }
             }
             
+            // Step 2.5: Check for duplicate sticker codes
+            const stickerCodes = [];
+            const stickerLocations = {}; // Track where each code was entered
+            
+            // Collect sticker codes from listed assets
+            for (let index = 0; index < currentAccountData.length; index++) {
+                const present = document.querySelector(`input[name="asset_${index}_present"]:checked`).value;
+                if (present === 'yes') {
+                    const code = document.getElementById(`sticker_${index}`)?.value.trim().toUpperCase();
+                    if (code) {
+                        if (stickerCodes.includes(code)) {
+                            const firstLocation = stickerLocations[code];
+                            alert(`DUPLICATE STICKER CODE!\n\nCode "${code}" used more than once:\n\n• ${firstLocation}\n• Asset #${index + 1} (SN: ${currentAccountData[index].SerialNumber})\n\nEach sticker must be unique.`);
+                            document.getElementById(`sticker_${index}`).focus();
+                            return;
+                        }
+                        stickerCodes.push(code);
+                        stickerLocations[code] = `Asset #${index + 1} (SN: ${currentAccountData[index].SerialNumber})`;
+                    }
+                }
+            }
+            
+            // Collect sticker codes from additional equipment
+            const hasAdditional = document.querySelector('input[name="hasAdditional"]:checked')?.value;
+            if (hasAdditional === 'yes') {
+                for (let i = 1; i <= additionalMachineCount; i++) {
+                    const machineDiv = document.getElementById(`additionalMachine_${i}`);
+                    if (machineDiv) {
+                        const code = document.getElementById(`addSticker_${i}`)?.value.trim().toUpperCase();
+                        if (code) {
+                            if (stickerCodes.includes(code)) {
+                                const firstLocation = stickerLocations[code];
+                                const machineType = document.getElementById(`addType_${i}`)?.value || 'Additional Equipment';
+                                const machineSerial = document.getElementById(`addSerial_${i}`)?.value || '';
+                                alert(`DUPLICATE STICKER CODE!\n\nCode "${code}" used more than once:\n\n• ${firstLocation}\n• Additional #${i} (SN: ${machineSerial})\n\nEach sticker must be unique.`);
+                                document.getElementById(`addSticker_${i}`).focus();
+                                return;
+                            }
+                            stickerCodes.push(code);
+                            stickerLocations[code] = `Additional Machine #${i}`;
+                        }
+                    }
+                }
+            }
+            
             // Step 3: Validate additional equipment if applicable
-            const hasAdditional = document.querySelector('input[name="hasAdditional"]:checked').value;
+            // Reuse hasAdditional from Step 2.5
             if (hasAdditional === 'yes') {
                 for (let i = 1; i <= additionalMachineCount; i++) {
                     const machineDiv = document.getElementById(`additionalMachine_${i}`);
